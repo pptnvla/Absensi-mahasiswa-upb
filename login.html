@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Absensi Mahasiswa | Universitas Pelita Bangsa</title>
+  <meta name="description" content="Sistem Absensi Mahasiswa — Universitas Pelita Bangsa, Teknik Informatika. Masuk dengan akun Anda.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== Override & tambahan khusus login ===== */
+    .login-page {
+      background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 40%, #7c3aed 80%, #0ea5e9 100%);
+    }
+
+    .login-container { max-width: 460px; }
+
+    /* Badge universitas di atas card */
+    .univ-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      animation: fadeSlideUp .4s ease both;
+    }
+
+    .univ-badge img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.1);
+      padding: 3px;
+    }
+
+    .univ-badge-text { text-align: left; }
+    .univ-badge-text .univ-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      letter-spacing: .3px;
+    }
+    .univ-badge-text .univ-faculty {
+      font-size: 12px;
+      color: rgba(255,255,255,.7);
+      margin-top: 2px;
+    }
+
+    /* Judul sistem */
+    .login-logo h1 { font-size: 24px; }
+    .login-logo p  { font-size: 13px; }
+
+    /* Card lebih lebar & premium */
+    .login-card {
+      border-top: 4px solid #d4af37;
+      animation: fadeSlideUp .5s ease .1s both;
+    }
+
+    .login-card h2 { font-size: 22px; }
+
+    /* Info box lebih bersih */
+    .login-info {
+      background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+      border-left: 3px solid #4f46e5;
+    }
+
+    /* Footer khusus login */
+    .login-footer {
+      text-align: center;
+      margin-top: 20px;
+      animation: fadeSlideUp .5s ease .2s both;
+    }
+
+    .login-footer .lf-univ {
+      font-size: 12px;
+      color: rgba(255,255,255,.65);
+      margin-bottom: 4px;
+    }
+
+    .login-footer .lf-copy {
+      font-size: 11px;
+      color: rgba(255,255,255,.45);
+    }
+  </style>
+</head>
+
+<body class="login-page">
+
+  <div class="login-container">
+
+    <!-- Badge Universitas -->
+    <div class="univ-badge">
+      <img src="images/logo-pelitabangsa.jpg" alt="Logo Universitas Pelita Bangsa">
+      <div class="univ-badge-text">
+        <div class="univ-name">Universitas Pelita Bangsa</div>
+        <div class="univ-faculty">Teknik Informatika · Bekasi</div>
+      </div>
+    </div>
+
+    <!-- Logo / Branding Sistem -->
+    <div class="login-logo">
+      <div class="logo-icon">📋</div>
+      <h1>Sistem Absensi Mahasiswa</h1>
+      <p>Pencatatan Kehadiran Digital · Semester 5</p>
+    </div>
+
+    <!-- Form Login -->
+    <div class="login-card">
+      <h2>Selamat Datang! 👋</h2>
+      <p class="subtitle">Masuk untuk mengakses sistem absensi</p>
+
+      <!-- Pesan error -->
+      <div id="loginError" class="hasil error" style="display:none; margin-bottom:16px;"></div>
+
+      <!-- Input nama pengguna -->
+      <div class="form-group">
+        <label for="username">Nama Pengguna</label>
+        <div class="input-wrapper">
+          <input type="text" id="username" placeholder="Masukkan nama pengguna" autocomplete="username">
+        </div>
+      </div>
+
+      <!-- Input kata sandi + toggle tampilkan/sembunyi -->
+      <div class="form-group">
+        <label for="password">Kata Sandi</label>
+        <div class="input-wrapper" style="position: relative;">
+          <input type="password" id="password" placeholder="Masukkan kata sandi" autocomplete="current-password" style="padding-right: 50px;">
+          <span class="toggle-password" id="togglePassword" title="Tampilkan/Sembunyikan" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁️</span>
+        </div>
+      </div>
+
+      <!-- Tombol Masuk -->
+      <button class="btn-login" id="btnLogin">🔑 Masuk ke Sistem</button>
+
+      <!-- Info akun demo -->
+      <div class="login-info">
+        <p>📌 <strong>Akun Demo:</strong></p>
+        <p>Nama pengguna: <strong>admin</strong></p>
+        <p>Kata sandi: <strong>admin123</strong></p>
+      </div>
+    </div>
+
+    <!-- Footer universitas -->
+    <div class="login-footer">
+      <div class="lf-univ">🎓 Universitas Pelita Bangsa — Teknik Informatika</div>
+      <div class="lf-copy">&copy; 2026 Puput Novela · NIM 312410470</div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== Jika sudah login, langsung ke dashboard =====
+    if (sessionStorage.getItem('loggedIn') === 'true') {
+      window.location.href = 'dashboard.html';
+    }
+
+    const btnLogin    = document.getElementById('btnLogin');
+    const loginError  = document.getElementById('loginError');
+    const inputUser   = document.getElementById('username');
+    const inputPass   = document.getElementById('password');
+    const togglePass  = document.getElementById('togglePassword');
+
+    // Tampilkan pesan error di dalam box merah
+    function tampilkanError(pesan) {
+      loginError.innerHTML = pesan;
+      loginError.style.display = 'block';
+      loginError.style.animation = 'none';
+      requestAnimationFrame(() => { loginError.style.animation = ''; });
+    }
+
+    // Sembunyikan pesan error
+    function sembunyikanError() {
+      loginError.style.display = 'none';
+    }
+
+    // ===== Proses login saat tombol diklik =====
+    btnLogin.addEventListener('click', function () {
+      const namaUser  = inputUser.value.trim();
+      const kataKunci = inputPass.value.trim();
+
+      sembunyikanError();
+
+      // Validasi: semua kolom harus diisi (operator OR)
+      if (namaUser === '' || kataKunci === '') {
+        tampilkanError('⚠️ Nama pengguna dan kata sandi wajib diisi!');
+        return;
+      }
+
+      // Validasi: kata sandi minimal 6 karakter
+      if (kataKunci.length < 6) {
+        tampilkanError('⚠️ Kata sandi harus minimal 6 karakter!');
+        return;
+      }
+
+      // Validasi: cek apakah kredensial benar (operator AND + NOT)
+      if (!(namaUser === 'admin' && kataKunci === 'admin123')) {
+        tampilkanError('❌ Nama pengguna atau kata sandi salah! Silakan coba lagi.');
+        return;
+      }
+
+      // Login berhasil — simpan di sessionStorage dan arahkan ke Dashboard
+      sessionStorage.setItem('loggedIn', 'true');
+      sessionStorage.setItem('userName', namaUser);
+      btnLogin.textContent = '✅ Masuk...';
+      btnLogin.disabled = true;
+
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+    });
+
+    // ===== Toggle tampil/sembunyi kata sandi =====
+    togglePass.addEventListener('click', function () {
+      const tipeInput = inputPass.getAttribute('type') === 'password' ? 'text' : 'password';
+      inputPass.setAttribute('type', tipeInput);
+      this.textContent = tipeInput === 'password' ? '👁️' : '🙈';
+    });
+
+    // ===== Tekan Enter untuk submit =====
+    inputPass.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') btnLogin.click();
+    });
+
+    inputUser.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') inputPass.focus();
+    });
+  </script>
+
+</body>
+</html>

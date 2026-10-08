@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Absensi — Absensi Sederhana</title>
+  <meta name="description" content="Riwayat lengkap data absensi mahasiswa yang telah tersimpan, dengan filter dan detail kehadiran.">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="app-page">
+
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <img src="images/logo-pelitabangsa.jpg" alt="Logo UPB">
+        </div>
+        <div>
+          <div class="brand-name">Absensi UPB</div>
+          <div class="brand-sub">Universitas Pelita Bangsa<br>Teknik Informatika</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+      <a href="absensi.html" class="nav-item" data-page="absensi.html">
+        <span class="nav-icon">✏️</span> Input Absensi
+      </a>
+      <a href="riwayat.html" class="nav-item" data-page="riwayat.html">
+        <span class="nav-icon">📂</span> Riwayat
+      </a>
+
+      <p class="nav-section-title">Informasi</p>
+      <a href="tentang.html" class="nav-item" data-page="tentang.html">
+        <span class="nav-icon">ℹ️</span> Tentang
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="nav-item logout" id="btnLogout">
+        <span class="nav-icon">🚪</span> Keluar
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== TOP BAR ===== -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <div class="page-title">Riwayat Absensi</div>
+        <div class="page-breadcrumb">Semua Data Kehadiran</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-time" id="topbarTime"></span>
+      <div class="user-avatar" id="userAvatar">A</div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- Filter & Kontrol -->
+    <div class="card" style="margin-bottom: 20px;">
+      <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; flex:1; min-width:0;">
+          <input type="text" id="filterNama" placeholder="🔍 Cari nama / NIM..."
+            style="flex:1; min-width:160px; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:14px; outline:none;">
+          <select id="filterStatus" style="padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:14px; background:#fff; outline:none;">
+            <option value="">Semua Status</option>
+            <option value="Hadir">Hadir</option>
+            <option value="Izin">Izin</option>
+            <option value="Sakit">Sakit</option>
+            <option value="Alfa">Alfa</option>
+          </select>
+          <select id="filterLayak" style="padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:14px; background:#fff; outline:none;">
+            <option value="">Semua Kelayakan</option>
+            <option value="layak">Layak Ujian</option>
+            <option value="tidak">Tidak Layak</option>
+          </select>
+        </div>
+        <button id="btnHapusSemua" class="btn btn-secondary"
+          style="flex:none; padding:10px 18px; white-space:nowrap;">🗑️ Hapus Semua</button>
+      </div>
+    </div>
+
+    <!-- Tabel Riwayat -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">📂</div>
+          Data Riwayat Kehadiran
+        </div>
+        <span id="jumlahEntri" style="font-size:13px; color:var(--text-secondary); font-weight:600;"></span>
+      </div>
+
+      <div id="tabelRiwayat"></div>
+    </div>
+
+    <footer class="app-footer">
+      <div class="footer-upb">
+        <img src="images/logo-pelitabangsa.jpg" alt="Logo UPB">
+        Universitas Pelita Bangsa — Teknik Informatika
+      </div>
+      <div class="footer-copy">&copy; 2026 Puput Novela &middot; NIM 312410470 &middot; Sistem Absensi Mahasiswa v2.0</div>
+    </footer>
+  </main>
+
+  <script src="nav.js"></script>
+  <script src="storage.js"></script>
+  <script>
+    // Cek login
+    if (sessionStorage.getItem('loggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const nama = sessionStorage.getItem('userName') || 'Admin';
+    document.getElementById('userAvatar').textContent = nama.charAt(0).toUpperCase();
+
+    function renderTabel() {
+      // Ambil data dan tambahkan originalIndex agar bisa dihapus biarpun difilter/di-reverse
+      const dataAsli = ambilSemuaData();
+      const dataDenganIndex = dataAsli.map(function(d, index) {
+        return { ...d, _originalIndex: index };
+      });
+
+      const cari = document.getElementById('filterNama').value.toLowerCase();
+      const filterStatus = document.getElementById('filterStatus').value;
+      const filterLayak = document.getElementById('filterLayak').value;
+
+      let filtered = dataDenganIndex.filter(function (d) {
+        const cocokCari = d.nama.toLowerCase().includes(cari) || d.nim.includes(cari);
+        const cocokStatus = filterStatus === '' || d.status === filterStatus;
+        const cocokLayak = filterLayak === '' ||
+          (filterLayak === 'layak' && d.layakUjian) ||
+          (filterLayak === 'tidak' && !d.layakUjian);
+        return cocokCari && cocokStatus && cocokLayak;
+      }).reverse(); // Tampilkan yang terbaru di atas
+
+      document.getElementById('jumlahEntri').textContent = filtered.length + ' entri ditemukan';
+
+      const container = document.getElementById('tabelRiwayat');
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>' +
+          '<h3>Belum ada data absensi</h3>' +
+          '<p>Silakan input absensi terlebih dahulu atau ubah filter Anda.</p></div>';
+        return;
+      }
+
+      const badgeStatus = {
+        'Hadir': 'badge-hadir', 'Izin': 'badge-izin',
+        'Sakit': 'badge-sakit', 'Alfa': 'badge-alfa'
+      };
+
+      let rows = filtered.map(function (d, i) {
+        const kategoriMap = {
+          'Sangat Baik': 'badge-layak', 'Baik': 'badge-layak',
+          'Kurang': 'badge-sakit', 'Sangat Kurang': 'badge-alfa'
+        };
+        
+        // Buat baris tabel dengan kolom: No, Nama, NIM, Status, Persentase, Tanggal, Aksi
+        return '<tr>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td style="font-weight:600;">' + d.nama + '</td>' +
+          '<td style="font-family:monospace;">' + d.nim + '</td>' +
+          '<td><span class="badge ' + (badgeStatus[d.status] || '') + '">' + d.status + '</span></td>' +
+          '<td>' +
+            '<span class="badge ' + (kategoriMap[d.kategori] || '') + '">' + d.persen + '%</span>' +
+            '<div class="progress-bar" style="width:80px; margin-top:4px;">' +
+              '<div class="progress-fill" style="width:' + d.persen + '%;"></div>' +
+            '</div>' +
+          '</td>' +
+          '<td style="font-size:13px; color:var(--text-secondary); white-space:nowrap;">' + (d.tanggal || d.waktu) + '</td>' +
+          '<td><button class="btn btn-secondary btn-hapus" data-index="' + d._originalIndex + '" style="padding: 6px 12px; font-size: 12px;">🗑️ Hapus</button></td>' +
+          '</tr>';
+      }).join('');
+
+      container.innerHTML = '<div class="table-wrapper"><table>' +
+        '<thead><tr>' +
+          '<th>No</th><th>Nama</th><th>NIM</th><th>Status</th>' +
+          '<th>Persentase</th><th>Tanggal</th><th>Aksi</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+        '</table></div>';
+
+      // Pasang event listener untuk tombol hapus per baris
+      document.querySelectorAll('.btn-hapus').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const indexAsli = parseInt(this.getAttribute('data-index'));
+          if (confirm('Apakah Anda yakin ingin menghapus entri absensi ini?')) {
+            hapusDataBerdasarkanIndex(indexAsli);
+            renderTabel();
+          }
+        });
+      });
+    }
+
+    // Filter real-time
+    ['filterNama', 'filterStatus', 'filterLayak'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', renderTabel);
+      document.getElementById(id).addEventListener('change', renderTabel);
+    });
+
+    // Hapus semua
+    document.getElementById('btnHapusSemua').addEventListener('click', function () {
+      if (ambilSemuaData().length === 0) {
+        alert('Belum ada data untuk dihapus.');
+        return;
+      }
+      if (confirm('Apakah Anda yakin ingin menghapus SEMUA riwayat absensi?')) {
+        hapusSemuaData();
+        renderTabel();
+      }
+    });
+
+    renderTabel();
+  </script>
+
+</body>
+</html>
